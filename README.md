@@ -1,17 +1,31 @@
-# 🐇 MCP SQLite Server
-This is a Model Context Protocol (MCP) server that provides comprehensive SQLite database interaction capabilities.
+# 🐇 MCP SQLite Server (Read-Only Fork)
+This is a Model Context Protocol (MCP) server that provides **read-only** SQLite database interaction capabilities with enterprise-grade security.
 
-![cursor-settings](https://raw.githubusercontent.com/jparkerweb/mcp-sqlite/refs/heads/main/.readme/mcp-sqlite.jpg)
+> **Note**: This is a security-hardened fork of [mcp-sqlite](https://github.com/jparkerweb/mcp-sqlite) by [Justin Parker](https://github.com/jparkerweb). The original project provided full CRUD operations. This fork transforms it into a read-only server with multiple layers of security protection.
 
-#### Maintained by
-<a href="https://www.equilllabs.com">
-  <img src="https://raw.githubusercontent.com/jparkerweb/eQuill-Labs/refs/heads/main/src/static/images/logo-text-outline.png" alt="eQuill Labs" height="32">
-</a>
+## Credits
+
+**Original Project**: [mcp-sqlite](https://github.com/jparkerweb/mcp-sqlite) by [Justin Parker](https://github.com/jparkerweb)
+**Original Maintainer**: [eQuill Labs](https://www.equilllabs.com)
+**This Fork**: Security-hardened read-only version by [Fanom2813](https://github.com/Fanom2813)
 
 ## Features
-- Complete CRUD operations (Create, Read, Update, Delete)
-- Database exploration and introspection
-- Execute custom SQL queries
+- 🔒 **Read-only access** - Database opened with `SQLITE_OPEN_READONLY` flag
+- 🛡️ **Multi-layer security** - Whitelist-based query validation, SQL injection protection
+- 🔍 **Database exploration** - List tables, inspect schemas, query data
+- 📊 **Custom read queries** - Execute SELECT queries with parameterized values
+- ✅ **Input validation** - Table names, column names, and parameters are strictly validated
+
+## Security Features
+
+This server implements defense-in-depth security:
+
+1. **Database-level protection**: Opened with `SQLITE_OPEN_READONLY` flag
+2. **Whitelist validation**: Only SELECT, EXPLAIN, and WITH (CTE) queries allowed
+3. **Blacklist dangerous commands**: Blocks INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, ATTACH, DETACH, PRAGMA, etc.
+4. **SQL injection prevention**: Parameterized queries and strict identifier validation
+5. **Comment stripping**: Removes SQL comments to prevent injection attacks
+6. **Multi-statement validation**: Each statement in multi-query requests is validated
 
 ## Setup
 
@@ -21,11 +35,11 @@ e.g. `Cursor`:
 ```json
 {
     "mcpServers": {
-        "MCP SQLite Server": {
+        "MCP SQLite Server (Read-Only)": {
             "command": "npx",
             "args": [
                 "-y",
-                "mcp-sqlite",
+                "mcp-sqlite-readonly",
                 "<path-to-your-sqlite-database.db>"
             ]
         }
@@ -37,20 +51,18 @@ e.g. `VSCode`:
 ```json
 {
     "servers": {
-        "MCP SQLite Server": {
+        "MCP SQLite Server (Read-Only)": {
             "type": "stdio",
             "command": "npx",
             "args": [
                 "-y",
-                "mcp-sqlite",
+                "mcp-sqlite-readonly",
                 "<path-to-your-sqlite-database.db>"
             ]
         }
     }
 }
 ```
-
-![cursor-settings](https://raw.githubusercontent.com/jparkerweb/mcp-sqlite/refs/heads/main/.readme/cursor-mcp-settings.jpg)
 
 Your database path must be provided as an argument.
 
@@ -108,40 +120,14 @@ Example:
 }
 ```
 
-### CRUD Operations
-
-#### create_record
-
-Insert a new record into a table.
-
-Parameters:
-- `table` (string): Name of the table
-- `data` (object): Record data as key-value pairs
-
-Example:
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "create_record",
-    "arguments": {
-      "table": "users",
-      "data": {
-        "name": "John Doe",
-        "email": "john@example.com",
-        "age": 30
-      }
-    }
-  }
-}
-```
+### Read Operations
 
 #### read_records
 
-Query records from a table with optional filtering.
+Query records from a table with optional filtering. All inputs are validated to prevent SQL injection.
 
 Parameters:
-- `table` (string): Name of the table
+- `table` (string): Name of the table (alphanumeric and underscores only)
 - `conditions` (object, optional): Filter conditions as key-value pairs
 - `limit` (number, optional): Maximum number of records to return
 - `offset` (number, optional): Number of records to skip
@@ -164,67 +150,21 @@ Example:
 }
 ```
 
-#### update_records
-
-Update records in a table that match specified conditions.
-
-Parameters:
-- `table` (string): Name of the table
-- `data` (object): New values as key-value pairs
-- `conditions` (object): Filter conditions as key-value pairs
-
-Example:
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "update_records",
-    "arguments": {
-      "table": "users",
-      "data": {
-        "email": "john.updated@example.com"
-      },
-      "conditions": {
-        "id": 1
-      }
-    }
-  }
-}
-```
-
-#### delete_records
-
-Delete records from a table that match specified conditions.
-
-Parameters:
-- `table` (string): Name of the table
-- `conditions` (object): Filter conditions as key-value pairs
-
-Example:
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "delete_records",
-    "arguments": {
-      "table": "users",
-      "conditions": {
-        "id": 1
-      }
-    }
-  }
-}
-```
-
-### Custom Queries
+### Custom Read-Only Queries
 
 #### query
 
-Execute a custom SQL query against the connected SQLite database.
+Execute a read-only SQL query against the database. **Only SELECT, EXPLAIN, and WITH (CTE) queries are allowed.**
+
+The query validator will:
+- Strip SQL comments to prevent injection
+- Validate each statement in multi-query requests
+- Block dangerous commands (INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, ATTACH, DETACH, PRAGMA, etc.)
+- Allow parameterized queries for safe value substitution
 
 Parameters:
-- `sql` (string): The SQL query to execute
-- `values` (array, optional): Array of parameter values to use in the query
+- `sql` (string): The SELECT query to execute
+- `values` (array, optional): Array of parameter values for placeholders (?)
 
 Example:
 ```json
@@ -233,12 +173,24 @@ Example:
   "params": {
     "name": "query",
     "arguments": {
-      "sql": "SELECT * FROM users WHERE id = ?",
-      "values": [1]
+      "sql": "SELECT * FROM users WHERE age > ? AND status = ?",
+      "values": [25, "active"]
     }
   }
 }
 ```
+
+**Allowed:**
+- `SELECT * FROM users WHERE id = ?`
+- `EXPLAIN QUERY PLAN SELECT * FROM users`
+- `WITH active_users AS (SELECT * FROM users WHERE status = 'active') SELECT * FROM active_users`
+
+**Blocked:**
+- `INSERT INTO users ...`
+- `UPDATE users SET ...`
+- `DELETE FROM users ...`
+- `DROP TABLE users`
+- `ATTACH DATABASE ...`
 
 ## Built with
 
@@ -247,6 +199,12 @@ Example:
 
 ---
 
+## License
+
+ISC License - Same as the original project
+
 ## Appreciation
-If you enjoy this library please consider sending me a tip to support my work 😀
-### [🍵 tip me here](https://ko-fi.com/jparkerweb)
+
+If you found the original project helpful, please consider supporting the original author:
+- **Original Author**: [Justin Parker (jparkerweb)](https://github.com/jparkerweb)
+- **Support**: [🍵 tip here](https://ko-fi.com/jparkerweb)

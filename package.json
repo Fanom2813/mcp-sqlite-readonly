@@ -1,7 +1,7 @@
 {
-  "name": "mcp-sqlite",
-  "version": "1.0.7",
-  "description": "Model Context Protocol (MCP) server that provides comprehensive SQLite database interaction capabilities",
+  "name": "mcp-sqlite-readonly",
+  "version": "1.1.0",
+  "description": "Model Context Protocol (MCP) server that provides read-only SQLite database interaction capabilities with enterprise-grade security",
   "main": "mcp-sqlite-server.js",
   "bin": {
     "mcp-sqlite-server": "./mcp-sqlite-server.js"
@@ -18,14 +18,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jparkerweb/mcp-sqlite.git"
+    "url": "https://github.com/Fanom2813/mcp-sqlite-readonly.git"
   },
-  "homepage": "https://github.com/jparkerweb/mcp-sqlite#readme",
+  "homepage": "https://github.com/Fanom2813/mcp-sqlite-readonly#readme",
   "bugs": {
-    "url": "https://github.com/jparkerweb/mcp-sqlite/issues",
-    "email": "equilllabs@gmail.com"
+    "url": "https://github.com/Fanom2813/mcp-sqlite-readonly/issues"
   },
-  "author": "Justin Parker <jparkerweb@gmail.com> (https://www.equilllabs.com)",
+  "author": "Fanom2813",
   "license": "ISC",
   "scripts": {
     "test": "npx @modelcontextprotocol/inspector mcp-sqlite-server.js",
