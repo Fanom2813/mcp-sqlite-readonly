@@ -11,6 +11,7 @@
     "mcp-sqlite-server.js",
     "README.md",
     "CHANGELOG.md",
+    "INSTALL.md",
     "LICENSE"
   ],
   "engines": {
@@ -29,6 +30,7 @@
   "scripts": {
     "test": "npx @modelcontextprotocol/inspector mcp-sqlite-server.js",
     "clean": "npx rimraf node_modules package-lock.json && npm install",
+    "install": "npm rebuild sqlite3 --build-from-source || echo 'Warning: sqlite3 build failed. Trying prebuilt binaries...'",
     "postinstall": "node -e \"console.log('\\nMCP SQLite server installed! Run with: npx mcp-sqlite-server <database-path>')\""
   },
   "keywords": [
